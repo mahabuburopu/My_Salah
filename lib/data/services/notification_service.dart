@@ -6,10 +6,7 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz_data;
 import '../../data/models/prayer.dart';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Top-level background notification action handler
-// (Must be top-level AND async — Flutter requirement for background callbacks)
-// ─────────────────────────────────────────────────────────────────────────────
+
 @pragma('vm:entry-point')
 Future<void> notificationTapBackground(NotificationResponse response) async {
   // Initialize bindings & plugin so SharedPreferences writes and
@@ -26,7 +23,7 @@ class NotificationService {
   static final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
 
-  // ── Notification IDs per prayer ─────────────────────────────────────────
+  // Notification IDs per prayer
   // Main at base, reminders at base+1..base+8, qaza at base+50..base+58
   static const Map<String, int> _baseIds = {
     'Fajr': 100,
@@ -36,7 +33,7 @@ class NotificationService {
     'Isha': 500,
   };
 
-  // ── Reminder intervals (minutes) ────────────────────────────────────────
+  // Reminder intervals (minutes)
   static const Map<String, int> _intervalMin = {
     'Fajr': 5,
     'Dhuhr': 15,
@@ -56,7 +53,7 @@ class NotificationService {
     'Isha'
   ];
 
-  // ── Initialization ────────────────────────────────────────────────────────
+  // Initialization 
   static Future<void> initialize() async {
     // Setup timezone using system UTC offset — no extra plugin needed
     tz_data.initializeTimeZones();
@@ -105,7 +102,7 @@ class NotificationService {
         ?.createNotificationChannel(channel);
   }
 
-  // ── Schedule all today's notifications ───────────────────────────────────
+  // Schedule all today's notifications
   static Future<void> scheduleTodayNotifications(
       Map<String, DateTime> prayerTimes) async {
     final now = DateTime.now();
@@ -123,7 +120,7 @@ class NotificationService {
       final status = await getPrayerStatus(prayerName, todayKey);
       if (_isLocked(status)) continue;
 
-      // ── Schedule Qaza check (when this prayer begins → check prev prayer) ──
+      // Schedule Qaza check (when this prayer begins → check prev prayer) 
       if (i > 0 && prayerTime.isAfter(now)) {
         final prevPrayer = _prayerOrder[i - 1];
         final prevStatus = await getPrayerStatus(prevPrayer, todayKey);
@@ -136,7 +133,7 @@ class NotificationService {
         }
       }
 
-      // ── Schedule main prayer notification + reminders ──
+      // Schedule main prayer notification + reminders
       if (prayerTime.isAfter(now)) {
         await _schedulePrayerSeries(
           prayerName: prayerName,
@@ -157,7 +154,7 @@ class NotificationService {
     }
   }
 
-  // ── Schedule main prayer notification + reminders ────────────────────────
+  // Schedule main prayer notification + reminders
   static Future<void> _schedulePrayerSeries({
     required String prayerName,
     required String displayPrayerName,
@@ -201,7 +198,7 @@ class NotificationService {
     }
   }
 
-  // ── Schedule Qaza check notification ─────────────────────────────────────
+  // Schedule Qaza check notification 
   static Future<void> _scheduleQazaCheck({
     required String prayerName,
     required DateTime atTime,
@@ -249,7 +246,7 @@ class NotificationService {
     return prayerName;
   }
 
-  // ── Schedule end-of-day processing ───────────────────────────────────────
+  // Schedule end-of-day processing
   static Future<void> _scheduleEOD(
       DateTime eodTime, String dateKey, Map<String, DateTime> times) async {
     // This notification triggers a silent check — any still-pending prayers
@@ -271,7 +268,7 @@ class NotificationService {
     );
   }
 
-  // ── Core: schedule a single notification ─────────────────────────────────
+  // Core: schedule a single notification
   static Future<void> _scheduleAt({
     required int id,
     required String title,
@@ -303,7 +300,7 @@ class NotificationService {
     }
   }
 
-  // ── Build notification details (no action buttons) ────────────────────────
+  // Build notification details (no action buttons)
   static NotificationDetails _buildNotificationDetails({
     required String title,
     required String body,
@@ -326,12 +323,12 @@ class NotificationService {
     );
   }
 
-  // ── Handle action (foreground) ────────────────────────────────────────────
+  //Handle action (foreground)
   static void _handleActionForeground(NotificationResponse response) {
     _handleActionBackground(response);
   }
 
-  // ── Handle action (background/killed app) ────────────────────────────────
+  // Handle action (background/killed app)
   static Future<void> _handleActionBackground(
       NotificationResponse response) async {
     final payload = response.payload;
@@ -370,7 +367,7 @@ class NotificationService {
         'NotificationService: $prayerName [$type] → $newStatus');
   }
 
-  // ── End-of-day: mark all still-pending prayers as 'missed' ───────────────
+  //  Endofday mark all still-pending prayers as 'missed'
   static Future<void> _processEndOfDay(String dateKey) async {
     for (final prayer in _prayerOrder) {
       final status = await getPrayerStatus(prayer, dateKey);
@@ -380,7 +377,7 @@ class NotificationService {
     }
   }
 
-  // ── Cancel all notifications for a specific prayer ────────────────────────
+  // Cancel all notifications for a specific prayer
   static Future<void> cancelPrayerNotifications(String prayerName) async {
     final baseId = _baseIds[prayerName];
     if (baseId == null) return;
@@ -395,12 +392,12 @@ class NotificationService {
     }
   }
 
-  // ── Cancel ALL scheduled notifications ───────────────────────────────────
+  // Cancel ALL scheduled notifications
   static Future<void> cancelAll() async {
     await _plugin.cancelAll();
   }
 
-  // ── Prayer status persistence ─────────────────────────────────────────────
+  // Prayer status persistence
   static String _statusKey(String prayer, String dateKey) =>
       'prayer_status_${dateKey}_$prayer';
 
@@ -422,7 +419,7 @@ class NotificationService {
     await prefs.setString(_statusKey(prayer, dateKey), status);
   }
 
-  /// Convert string status → PrayerStatus enum
+  // Convert string status → PrayerStatus enum
   static PrayerStatus toPrayerStatus(String? status) {
     switch (status) {
       case 'ontime':
@@ -438,7 +435,7 @@ class NotificationService {
     }
   }
 
-  /// Convert PrayerStatus enum → string
+  // Convert PrayerStatus enum → string
   static String fromPrayerStatus(PrayerStatus status) {
     switch (status) {
       case PrayerStatus.onTime:
@@ -457,7 +454,7 @@ class NotificationService {
   static bool _isLocked(String? status) =>
       status == 'ontime' || status == 'qaza' || status == 'missed';
 
-  // ── Manually mark a prayer (from UI) ─────────────────────────────────────
+  //Manually mark a prayer (from UI)
   /// Returns false if prayer is already locked (can't change)
   static Future<bool> markFromUI(String prayerName, PrayerStatus status) async {
     final dateKey = todayKey;
@@ -484,7 +481,7 @@ class NotificationService {
     return result;
   }
 
-  /// Map common UTC offset (in minutes) to IANA timezone name
+  /// Map common UTC offset in minutes to IANA timezone name
   static String _guessTimezone(int offsetMinutes) {
     const map = {
       360: 'Asia/Dhaka',       // UTC+6  Bangladesh
@@ -506,11 +503,11 @@ class NotificationService {
     return map[offsetMinutes] ?? 'Asia/Dhaka';
   }
 
-  // ── Logout helpers ──────────────────────────────────────────────────────
+  //Logout helpers
 
   /// Clear today's prayer status cache from SharedPreferences (called on logout).
   /// Prevents the next user from inheriting the previous user's prayer marks.
-  /// Note: cancelAll() for notifications already exists above.
+  /// cancelAll() for notifications already exists above.
   static Future<void> clearTodayStatuses() async {
     final prefs = await SharedPreferences.getInstance();
     final today = DateTime.now();
