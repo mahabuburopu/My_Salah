@@ -9,8 +9,9 @@ import '../../data/services/database_service.dart';
 import '../../providers/settings_provider.dart';
 import '../../core/constants/app_colors.dart';
 
-/// [isSignIn] = true, verifies OTP then signs in with email+password.
-/// [isSignIn] = false, verifies OTP then creates a new account.
+/// OTP verification screen shown after Sign Up OR Sign In.
+/// [isSignIn] = true → verifies OTP then signs in with email+password.
+/// [isSignIn] = false (default) → verifies OTP then creates a new account.
 class OtpScreen extends StatefulWidget {
   final String email;
   final String password;
@@ -47,7 +48,7 @@ class _OtpScreenState extends State<OtpScreen> {
   @override
   void initState() {
     super.initState();
-    _startCooldown();
+    _startCooldown(); // OTP was already sent from AuthScreen
   }
 
   @override
@@ -94,6 +95,7 @@ class _OtpScreenState extends State<OtpScreen> {
     }
     setState(() { _isVerifying = true; _errorMsg = null; });
 
+    // 1. Verify OTP via Edge Function
     final otpError = await _supabase.verifyOtp(widget.email, _otp);
     if (!mounted) return;
     if (otpError != null) {
@@ -102,7 +104,7 @@ class _OtpScreenState extends State<OtpScreen> {
     }
 
     if (widget.isSignIn) {
-      
+      // ── SIGN IN mode: OTP verified → now sign in with email+password ──
       try {
         final userData = await _supabase.signIn(
           email: widget.email,
@@ -131,8 +133,10 @@ class _OtpScreenState extends State<OtpScreen> {
             .updateProfile(userData['name'], userData['email'],
                 gender: userData['gender'] ?? 'Male');
 
+        // Wipe local DB before restoring so Guest data doesn't bleed into new account
         await DatabaseService().clearAllRecords();
 
+        // Restore prayer history from cloud
         await SyncService.instance.restoreFromCloud();
 
         if (!mounted) return;
@@ -142,6 +146,7 @@ class _OtpScreenState extends State<OtpScreen> {
         setState(() { _isVerifying = false; _errorMsg = e.toString(); });
       }
     } else {
+      // ── SIGN UP mode: OTP verified → create account ──
       final signUpError = await _supabase.signUpAfterOtp(
         email: widget.email,
         password: widget.password,
@@ -167,6 +172,7 @@ class _OtpScreenState extends State<OtpScreen> {
       await Provider.of<SettingsProvider>(context, listen: false)
           .updateProfile(widget.name, widget.email, gender: widget.gender);
 
+      // Wipe local DB so Guest data doesn't bleed into new account
       await DatabaseService().clearAllRecords();
 
       if (!mounted) return;

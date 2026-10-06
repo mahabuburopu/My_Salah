@@ -1,10 +1,9 @@
-//for gps location, city name by latitude and longtitude, and timezone offset
 import 'dart:convert';
-import 'package:geolocator/geolocator.dart';//gps location
+import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 
 class LocationService {
-  /// Returns true if the device's location service is switched on.
+  /// Returns true if the device's location (GPS) service is switched on.
   static Future<bool> isGpsEnabled() =>
       Geolocator.isLocationServiceEnabled();
 
@@ -33,11 +32,11 @@ class LocationService {
   }
 
 
-  // Reverse geocode using OpenStreetMap Nominatim
+  /// Reverse geocode using OpenStreetMap Nominatim (free, no API key)
   static Future<String> getCityName(double lat, double lon) async {
     try {
       final url = Uri.parse(
-        'https://nominatim.openstreetmap.org/reverse' //geocode 
+        'https://nominatim.openstreetmap.org/reverse'
         '?lat=$lat&lon=$lon&format=json&accept-language=en',
       );
       final response = await http

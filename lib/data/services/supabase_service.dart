@@ -8,9 +8,11 @@ class SupabaseService {
   SupabaseService._();
   static final SupabaseService instance = SupabaseService._();
 
+  // ── Replace these with your actual project values ─────────────────────────
   // Found at: Supabase Dashboard → Settings → API
   static const String _supabaseUrl = 'https://qrwrtgaerpivibeqkygj.supabase.co';
   static const String _supabaseAnonKey = 'sb_publishable__YSUGBezpkjqH6B5uOoeMg_tK0McElA';
+  // ─────────────────────────────────────────────────────────────────────────
 
   static SupabaseClient get _client => Supabase.instance.client;
 
@@ -22,7 +24,7 @@ class SupabaseService {
     );
   }
 
-  //Session
+  // ── Session ────────────────────────────────────────────────────────────────
 
   User? get currentUser => _client.auth.currentUser;
   bool get isSignedIn => _client.auth.currentUser != null;
@@ -30,9 +32,9 @@ class SupabaseService {
   /// The currently signed-in user's UUID, or null for guest.
   String? get userId => _client.auth.currentUser?.id;
 
-  //OTP & User Check
+  // ── OTP & User Checks ──────────────────────────────────────────────────────
 
-  // Checks if an email is already registered using the custom RPC function.
+  /// Checks if an email is already registered using the custom RPC function.
   Future<bool> checkEmailExists(String email) async {
     try {
       final res = await _client.rpc(
@@ -42,8 +44,8 @@ class SupabaseService {
       return res == true;
     } catch (e) {
       debugPrint('checkEmailExists error: $e');
-      // On error, default to false so it don't block legitimate signups if network fails.
-      // Or throw to handle it in the UI. it return false to allow the attempt.
+      // On error, default to false so we don't block legitimate signups if network fails.
+      // Or throw to handle it in the UI. Let's return false to allow the attempt.
       return false;
     }
   }
@@ -100,10 +102,10 @@ class SupabaseService {
     }
   }
 
-  // Sign Up
+  // ── Sign Up ────────────────────────────────────────────────────────────────
 
-  // Creates a Supabase Auth user + profile row after OTP is already verified.
-  // Returns null on success, or an error message string on failure.
+  /// Creates a Supabase Auth user + profile row after OTP is already verified.
+  /// Returns null on success, or an error message string on failure.
   Future<String?> signUpAfterOtp({
     required String email,
     required String password,
@@ -137,7 +139,7 @@ class SupabaseService {
     }
   }
 
-  // Sign In
+  // ── Sign In ────────────────────────────────────────────────────────────────
 
   /// Signs in an existing user with email + password.
   /// Returns a map with user data on success, or throws [String] error message.
@@ -179,7 +181,7 @@ class SupabaseService {
     }
   }
 
-  // Sign Out
+  // ── Sign Out ───────────────────────────────────────────────────────────────
 
   Future<void> signOut() async {
     try {
@@ -189,9 +191,10 @@ class SupabaseService {
     }
   }
 
-  // Cloud Prayer Records 
+  // ── Cloud Prayer Records ───────────────────────────────────────────────────
 
   /// Upserts a batch of prayer records to Supabase.
+  /// [records] is a list of maps matching the prayer_records schema.
   /// Returns true on success, false on failure.
   Future<bool> upsertPrayerRecords(
       List<Map<String, dynamic>> records) async {

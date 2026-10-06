@@ -8,7 +8,7 @@ class PrayerTimeCalculator {
   final DateTime date;
   /// 0 = Standard Shafi (shadow factor 1), 1 = Hanafi (shadow factor 2)
   final int asrMethod;
-  //when create class must need this
+
   PrayerTimeCalculator({
     required this.latitude,
     required this.longitude,
@@ -18,22 +18,22 @@ class PrayerTimeCalculator {
   });
 
   // Calculation constants
-  static const double _fajrAngle = 18.0;//horaizon er niche 18
+  static const double _fajrAngle = 18.0;
   static const double _ishaAngle = 17.0;
 
   Map<String, DateTime> getPrayerTimes() {
     final jd = _julianDay(date.year, date.month, date.day);
-    final d = jd - 2451545.0; //to ditect hte sun position
+    final d = jd - 2451545.0;
 
-    final g = _sunMeanAnomaly(d); //orbits angular parameter
+    final g = _sunMeanAnomaly(d);
     final q = _sunMeanLongitude(d);
     final l = _sunTrueLongitude(g, q);
-    final e = _obliquityEcliptic(d); //korkot kranti rekha
+    final e = _obliquityEcliptic(d);
     final ra = _rightAscension(l, e);
-    final dec = _sunDeclination(l, e);//how far away from celestail equator
+    final dec = _sunDeclination(l, e);
     final eq = _equationOfTime(g, q, l, ra);
 
-    final transit = _getTransit(eq);//solar noon
+    final transit = _getTransit(eq);
     final sunrise = _getSunriseTime(dec, transit);
     final sunset = _getSunsetTime(dec, transit);
 
@@ -52,7 +52,7 @@ class PrayerTimeCalculator {
     };
   }
 
-  double _julianDay(int year, int month, int day) { //for line25
+  double _julianDay(int year, int month, int day) {
     if (month <= 2) {
       year -= 1;
       month += 12;

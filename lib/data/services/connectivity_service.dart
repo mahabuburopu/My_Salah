@@ -1,7 +1,7 @@
-import 'package:connectivity_plus/connectivity_plus.dart';//for checking net work connection
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 /// Lightweight wrapper around connectivity_plus.
-/// Used by sync_service to decide whether to push data to Supabase.
+/// Used by SyncService to decide whether to push data to Supabase.
 class ConnectivityService {
   ConnectivityService._();
   static final ConnectivityService instance = ConnectivityService._();

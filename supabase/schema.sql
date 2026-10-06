@@ -1,3 +1,8 @@
+-- ============================================================
+-- My Salah App — Supabase Database Schema
+-- Run this SQL in: Supabase Dashboard → SQL Editor → New Query
+-- ============================================================
+
 -- 1. User profiles table
 --    Supabase Auth handles the actual auth row (auth.users).
 --    This table stores extra profile info (name, gender, age).
@@ -66,3 +71,6 @@ CREATE TABLE public.otp_verifications (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Auto-clean old OTP records (optional but good practice)
+-- Run this from a cron job or Supabase scheduled function:
+-- DELETE FROM public.otp_verifications WHERE expires_at < NOW() - INTERVAL '1 hour';

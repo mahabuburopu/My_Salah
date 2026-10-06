@@ -13,7 +13,7 @@ class HistoryProvider extends ChangeNotifier {
   bool _isLoading = false;
 
   // Tracks the last markCount seen from PrayerProvider.
-  // Refresh only fires when this changes — not on every 1-second tick.
+  // Refresh only fires when this changes — NOT on every 1-second tick.
   int _lastMarkCount = 0;
 
   DateTime get selectedDate => _selectedDate;

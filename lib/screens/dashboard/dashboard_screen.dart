@@ -312,7 +312,9 @@ class DashboardScreen extends StatelessWidget {
 
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
 //  Prayer Tile
+// ─────────────────────────────────────────────────────────────────────────────
 
 class _PrayerTile extends StatelessWidget {
   final Prayer prayer;
@@ -410,7 +412,7 @@ class _PrayerTile extends StatelessWidget {
     );
   }
 
-  // Status badge
+  // ── Status badge (shown on the right of the name row) ──
   Widget _buildStatusBadge(BuildContext context) {
     switch (prayer.status) {
       case PrayerStatus.onTime:
@@ -539,7 +541,9 @@ class _PrayerTile extends StatelessWidget {
 
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
 //  Reusable Widgets
+// ─────────────────────────────────────────────────────────────────────────────
 
 class _Badge extends StatelessWidget {
   final String label;

@@ -15,17 +15,17 @@ class PrayerRecord {
     this.prayedAt,
   });
 
-  Map<String, dynamic> toMap() { //dynamic for different Data type
+  Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'date': date.toIso8601String().substring(0, 10), //store Date with time and only date needed so .substring() 10 char
+      'date': date.toIso8601String().substring(0, 10),
       'prayer_name': prayerName.index,
       'status': status.index,
       'prayed_at': prayedAt?.toIso8601String(),
     };
   }
 
-  factory PrayerRecord.fromMap(Map<String, dynamic> map) { //creating object from sql Database from map
+  factory PrayerRecord.fromMap(Map<String, dynamic> map) {
     return PrayerRecord(
       id: map['id'],
       date: DateTime.parse(map['date']),

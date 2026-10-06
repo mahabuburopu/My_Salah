@@ -13,7 +13,7 @@ class SettingsProvider extends ChangeNotifier {
 
   // Location
   bool _autoLocation = true;
-  double _latitude = 23.8103; // Default: Dhaka, Bangladesh
+  double _latitude = 23.8103;  // Default: Dhaka, Bangladesh
   double _longitude = 90.4125;
   String _cityName = 'Dhaka, Bangladesh';
 
@@ -46,7 +46,6 @@ class SettingsProvider extends ChangeNotifier {
   int get calculationMethod => _calculationMethod;
   int get asrMethod => _asrMethod;
 
-  // Loads the saved settings when the app starts.
   Future<void> init() async {
     _prefs = await SharedPreferences.getInstance();
     _loadPrefs();
@@ -54,7 +53,6 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Reads the previously saved settings from the device. If no value was saved before, the default value is used.
   void _loadPrefs() {
     _userName = _prefs.getString('user_name') ?? 'Muslim User';
     _userEmail = _prefs.getString('user_email') ?? 'user@example.com';
@@ -68,14 +66,12 @@ class SettingsProvider extends ChangeNotifier {
     _calculationMethod = _prefs.getInt('calculationMethod') ?? 3;
     _asrMethod = _prefs.getInt('asrMethod') ?? 0;
 
-    // Load the saved reminder time for each prayer.
     for (final prayer in ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha']) {
       _reminderMinutes[prayer] =
           _prefs.getInt('reminder_$prayer') ?? _reminderMinutes[prayer]!;
     }
   }
 
-  // Gets the current location and finds the city name from it.Then saves the new location so it can be used later.
   Future<void> _fetchLocation() async {
     final position = await LocationService.getCurrentLocation();
     if (position != null) {
@@ -89,9 +85,7 @@ class SettingsProvider extends ChangeNotifier {
     }
   }
 
-  // Updates the user's name, email, and optionally gender.The updated information is also saved locally.
-  Future<void> updateProfile(String name, String email,
-      {String? gender}) async {
+  Future<void> updateProfile(String name, String email, {String? gender}) async {
     // Guard: ensure _prefs is initialized even if called before init() completes
     _prefs = await SharedPreferences.getInstance();
     _userName = name;
@@ -103,7 +97,6 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  //Turns automatic location on or off.When turned on, the app immediately gets the current location.
   Future<void> setAutoLocation(bool value) async {
     _autoLocation = value;
     await _prefs.setBool('autoLocation', value);
@@ -111,7 +104,6 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Saves a location selected manually by the user.
   Future<void> setManualLocation(double lat, double lon, String city) async {
     _latitude = lat;
     _longitude = lon;
@@ -122,42 +114,36 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Turns the main prayer reminder option on or off.
   Future<void> setMasterReminders(bool value) async {
     _masterReminders = value;
     await _prefs.setBool('masterReminders', value);
     notifyListeners();
   }
 
-  // Changes how many minutes before a prayer the reminder should appear.
   Future<void> setReminderMinutes(String prayer, int minutes) async {
     _reminderMinutes[prayer] = minutes;
     await _prefs.setInt('reminder_$prayer', minutes);
     notifyListeners();
   }
 
-  // Changes the method used to calculate prayer times.
   Future<void> setCalculationMethod(int method) async {
     _calculationMethod = method;
     await _prefs.setInt('calculationMethod', method);
     notifyListeners();
   }
 
-  // Changes the Asr calculation method.0 = Standard/Shafi, 1 = Hanafi.
   Future<void> setAsrMethod(int method) async {
     _asrMethod = method;
     await _prefs.setInt('asrMethod', method);
     notifyListeners();
   }
 
-  // Turns all prayer notifications on or off.
   Future<void> setNotifications(bool value) async {
     _notificationsEnabled = value;
     await _prefs.setBool('notificationsEnabled', value);
     notifyListeners();
   }
 
-  // Converts the reminder time into a readable text for the UI.For example, 15 becomes "15 min before".
   String getReminderLabel(String prayer) {
     final mins = _reminderMinutes[prayer] ?? 0;
     if (mins == 0) return 'At Adhan';
@@ -167,10 +153,10 @@ class SettingsProvider extends ChangeNotifier {
   /// Signs out from Supabase and clears all auth-related local data.
   /// Called from SettingsScreen logout button.
   Future<void> logout() async {
-    // Sign out from Supabase (for guests it do nothing)
+    // Sign out from Supabase (no-op for guests)
     await SupabaseService.instance.signOut();
 
-    // Remove the login-related information saved on the device.
+    // Clear auth fields in SharedPreferences
     await _prefs.setBool('is_logged_in', false);
     await _prefs.remove('user_name');
     await _prefs.remove('user_email');
@@ -178,7 +164,7 @@ class SettingsProvider extends ChangeNotifier {
     await _prefs.remove('userGender');
     await _prefs.remove('is_guest');
 
-    // Reset the profile in memory so the UI shows the default values.
+    // Reset in-memory profile
     _userName = 'Muslim User';
     _userEmail = 'user@example.com';
     _userGender = 'Male';

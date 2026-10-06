@@ -8,6 +8,8 @@ import '../../data/services/connectivity_service.dart';
 import 'otp_screen.dart';
 
 class AuthScreen extends StatefulWidget {
+  /// Set to true when navigating here from the logout flow.
+  /// Hides the "Continue as Guest" button so the user is forced to sign in.
   final bool fromLogout;
   const AuthScreen({super.key, this.fromLogout = false});
 
@@ -65,12 +67,13 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
     _fadeCtrl.forward();
   }
 
-  //sign up
+  // ── SIGN UP ───────────────────────────────────────────────
   Future<void> _signUp() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() { _isLoading = true; _errorMsg = null; });
 
+    // 1. Check internet — auth is always online
     final online = await _connectivity.isOnline();
     if (!mounted) return;
     if (!online) {
@@ -81,6 +84,7 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
       return;
     }
 
+    // 2. Check if email already exists
     final email = _emailCtrl.text.trim().toLowerCase();
     final exists = await _supabase.checkEmailExists(email);
     if (!mounted) return;
@@ -92,6 +96,7 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
       return;
     }
 
+    // 3. Send OTP via Brevo (through Supabase Edge Function)
     final otpError = await _supabase.sendOtp(email);
     if (!mounted) return;
     if (otpError != null) {
@@ -101,6 +106,7 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
 
     setState(() => _isLoading = false);
 
+    // 3. Navigate to OTP screen — account is created there after verification
     Navigator.of(context).push(MaterialPageRoute(
       builder: (_) => OtpScreen(
         email: _emailCtrl.text.trim().toLowerCase(),
@@ -112,11 +118,12 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
     ));
   }
 
-  //sign in
+  // ── SIGN IN ───────────────────────────────────────────────
   Future<void> _signIn() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() { _isLoading = true; _errorMsg = null; });
 
+    // 1. Check internet — sign in is always online
     final online = await _connectivity.isOnline();
     if (!mounted) return;
     if (!online) {
@@ -128,6 +135,8 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
     }
 
     try {
+      // 2. Validate credentials FIRST before sending OTP
+      // We do a dry-run sign-in to ensure password is correct.
       final userData = await _supabase.signIn(
         email: _emailCtrl.text.trim(),
         password: _passwordCtrl.text,
@@ -142,6 +151,7 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
         return;
       }
 
+      // 3. Send OTP via Brevo
       final otpError = await _supabase.sendOtp(_emailCtrl.text.trim());
       if (!mounted) return;
       if (otpError != null) {
@@ -154,11 +164,12 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
 
       setState(() => _isLoading = false);
 
+      // 4. Navigate to OTP screen for verification
       Navigator.of(context).push(MaterialPageRoute(
         builder: (_) => OtpScreen(
           email: _emailCtrl.text.trim().toLowerCase(),
           password: _passwordCtrl.text,
-          isSignIn: true,
+          isSignIn: true, // Tell OtpScreen to log in instead of sign up
         ),
       ));
     } catch (e) {
@@ -303,7 +314,7 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                         ),
                       ),
 
-                    //SIGN UP ONLY fields
+                    // ── SIGN UP ONLY fields ──
                     if (!_isLogin) ...[
                       _field(
                         controller: _nameCtrl,
@@ -391,7 +402,7 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                           v!.length < 6 ? 'Minimum 6 characters' : null,
                     ),
 
-                    // Confirm Password
+                    // Confirm Password (sign up only)
                     if (!_isLogin) ...[
                       const SizedBox(height: 14),
                       _field(
@@ -487,7 +498,7 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                     ),
                     const SizedBox(height: 14),
 
-                    // Guest button
+                    // Guest button — hidden after logout so user must sign in
                     if (!widget.fromLogout)
                     SizedBox(
                       width: double.infinity,

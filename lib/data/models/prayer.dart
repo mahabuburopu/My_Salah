@@ -1,11 +1,10 @@
-//present state of salah
-enum PrayerStatus { onTime, qaza, missed, upcoming, prayed, pending } //enum is option er talika
+enum PrayerStatus { onTime, qaza, missed, upcoming, prayed, pending }
 
 enum PrayerName { fajr, dhuhr, asr, maghrib, isha }
 
-extension PrayerNameExtension on PrayerName { //changing the name without creating class
+extension PrayerNameExtension on PrayerName {
   String get displayName {
-    switch (this) { //present prayer is this prayer
+    switch (this) {
       case PrayerName.fajr:
         return 'Fajr';
       case PrayerName.dhuhr:
@@ -34,7 +33,7 @@ extension PrayerNameExtension on PrayerName { //changing the name without creati
     }
   }
 
-  // Returns 'Jumah' on Fridays for male users (Dhuhr -> Jumah)
+  /// Returns 'Jumah' on Fridays for male users (Dhuhr → Jumah), else displayName.
   String localizedName(String gender, DateTime date) {
     if (this == PrayerName.dhuhr &&
         gender == 'Male' &&
@@ -51,14 +50,14 @@ class Prayer {
   final PrayerStatus status;
 
   Prayer({
-    required this.name, //must need
-    required this.time, //must need
+    required this.name,
+    required this.time,
     this.status = PrayerStatus.upcoming,
   });
 
   bool get isPrayed => status == PrayerStatus.onTime || status == PrayerStatus.qaza || status == PrayerStatus.prayed;
 
-  // Once a final status is set, it cannot be changed
+  /// Once a final status is set, it cannot be changed
   bool get isLocked =>
       status == PrayerStatus.onTime ||
       status == PrayerStatus.qaza ||
@@ -85,7 +84,7 @@ class Prayer {
     return Prayer(
       name: name,
       time: time,
-      status: status ?? this.status, // if one null then another will be null
+      status: status ?? this.status,
     );
   }
 }

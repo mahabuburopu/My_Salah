@@ -4,32 +4,31 @@ import 'package:path/path.dart';
 import '../models/prayer.dart';
 import '../models/prayer_record.dart';
 
-class DatabaseService { 
-  // Singleton to create a same data base
+class DatabaseService {
+  // ── Singleton ────────────────────────────────────────────
   static final DatabaseService _instance = DatabaseService._internal();
   factory DatabaseService() => _instance;
   DatabaseService._internal();
 
-  static Database? _database; //store actual database object
+  static Database? _database;
   static const String _dbName = 'my_salah.db';
-  static const int _dbVersion = 3; // v3 introduce the is_synced column
+  static const int _dbVersion = 3; // v3 adds is_synced column
 
-  Future<Database> get database async { // initialize the database if nothing opened yet otherwise use  the exiting one
+  Future<Database> get database async {
     _database ??= await _initDatabase();
     return _database!;
   }
 
   Future<Database> _initDatabase() async {
     final path = join(await getDatabasesPath(), _dbName);
-    return openDatabase( //if it finds  mysalah.db then it open it
+    return openDatabase(
       path,
       version: _dbVersion,
-      onCreate: _onCreate, // create the database
-      onUpgrade: _onUpgrade, //update the data base
+      onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
   }
 
-  // create prayer_records table
   Future<void> _onCreate(Database db, int version) async {
     await db.execute('''
       CREATE TABLE prayer_records (
@@ -39,7 +38,7 @@ class DatabaseService {
         status INTEGER NOT NULL,
         prayed_at TEXT,
         is_synced INTEGER NOT NULL DEFAULT 0,
-        UNIQUE(date, prayer_name)  
+        UNIQUE(date, prayer_name)
       )
     ''');
     await db.execute(
@@ -61,7 +60,7 @@ class DatabaseService {
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
-      // Add index 
+      // Add index (safe to ignore if already exists)
       try {
         await db.execute(
             'CREATE INDEX idx_prayer_records_date ON prayer_records(date)');
@@ -85,7 +84,7 @@ class DatabaseService {
       try {
         await db.execute(
             'ALTER TABLE prayer_records ADD COLUMN is_synced INTEGER NOT NULL DEFAULT 0');
-      } catch (_) {} // safe if column already exists 
+      } catch (_) {} // safe if column already exists (e.g. fresh install)
     }
   }
 
@@ -99,14 +98,14 @@ class DatabaseService {
       await db.insert(
         'prayer_records',
         map,
-        conflictAlgorithm: ConflictAlgorithm.replace, //if the same date replace the old one
+        conflictAlgorithm: ConflictAlgorithm.replace,
       );
     } catch (e, stack) {
       debugPrint('DB Error savePrayerRecord: $e\n$stack');
     }
   }
 
-  /// Wipes all local prayer records. while signing out or switching accounts.
+  /// Wipes all local prayer records. Use this when signing out or switching accounts.
   Future<void> clearAllRecords() async {
     try {
       final db = await database;
@@ -118,8 +117,8 @@ class DatabaseService {
   }
 
   /// Bulk-inserts records downloaded from Supabase into the local DB.
-  /// Each record is marked is_synced=1 (already in cloud ).
-  ///  IGNORE conflict - locally-edited records are not overwritten.
+  /// Each record is marked is_synced=1 (already in cloud — no need to re-push).
+  /// Uses IGNORE conflict so locally-edited records are NOT overwritten.
   Future<void> bulkInsertSynced(List<Map<String, dynamic>> records) async {
     try {
       final db = await database;
@@ -236,9 +235,7 @@ class DatabaseService {
         PrayerStatus.onTime.index,
         PrayerStatus.qaza.index,
       ]);
-      return result
-          .map((r) => {'date': r['date'], 'count': r['count']})
-          .toList();
+      return result.map((r) => {'date': r['date'], 'count': r['count']}).toList();
     } catch (e, stack) {
       debugPrint('DB Error getLast7DaysCounts: $e\n$stack');
       return [];
@@ -267,13 +264,11 @@ class DatabaseService {
         startDate.toIso8601String().substring(0, 10),
         endDate.toIso8601String().substring(0, 10),
       ]);
-      return result
-          .map((r) => {
-                'date': r['date'] as String,
-                'onTime': (r['onTime'] as int?) ?? 0,
-                'qaza': (r['qaza'] as int?) ?? 0,
-              })
-          .toList();
+      return result.map((r) => {
+            'date': r['date'] as String,
+            'onTime': (r['onTime'] as int?) ?? 0,
+            'qaza': (r['qaza'] as int?) ?? 0,
+          }).toList();
     } catch (e, stack) {
       debugPrint('DB Error getLast7DaysCountsSeparate: $e\n$stack');
       return [];
@@ -309,7 +304,6 @@ class DatabaseService {
       return 0;
     }
   }
-
   /// Returns all prayer records where is_synced = 0.
   /// Used by SyncService to batch-push unsynced data to Supabase.
   Future<List<Map<String, dynamic>>> getUnsyncedRecords() async {
@@ -342,3 +336,4 @@ class DatabaseService {
     }
   }
 }
+

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-// on for letter, icons etc on the bgnd;   outline for border
+
 class AppTheme {
-  static ThemeData get darkTheme => ThemeData( //static for using without any obj
+  static ThemeData get darkTheme => ThemeData(
         brightness: Brightness.dark,
-        useMaterial3: true, //flutter ui design system 3
+        useMaterial3: true,
         fontFamily: 'Roboto',
-        scaffoldBackgroundColor: const Color(0xFF1A1008), //default bg color
+        scaffoldBackgroundColor: const Color(0xFF1A1008),
         colorScheme: const ColorScheme.dark(
-          primary: Color(0xFFC9A87C), //primary main color
+          primary: Color(0xFFC9A87C),
           secondary: Color(0xFFDEC098),
           surface: Color(0xFF2C1F11),
           onPrimary: Colors.black,
@@ -17,8 +17,8 @@ class AppTheme {
         cardColor: const Color(0xFF2C1F11),
         cardTheme: CardThemeData(
           color: const Color(0xFF2C1F11),
-          elevation: 0, // no shadow
-          shape: RoundedRectangleBorder( //card shap
+          elevation: 0,
+          shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
             side: const BorderSide(color: Color(0xFF3D2E1A)),
           ),

@@ -1,23 +1,23 @@
-//connect api to restore salah time and convert string to DateTime
-import 'dart:convert'; // data come in json fromate so need this
+import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class AladhanService {
-  static const String _baseUrl = 'https://api.aladhan.com/v1'; // _ for private
+  static const String _baseUrl = 'https://api.aladhan.com/v1';
 
   /// Fetch prayer times from Aladhan API.
   /// [method]    — Aladhan API code: 1=Karachi, 2=ISNA, 3=MWL, 4=UmmAlQura, 5=Egyptian
   /// [asrMethod] — 0=Shafi (standard), 1=Hanafi
-  static Future<Map<String, String>?> getPrayerTimes({ // future for uder process
+  static Future<Map<String, String>?> getPrayerTimes({
     required double latitude,
     required double longitude,
     required DateTime date,
-    int method = 4,
-    int asrMethod = 1,
-  }) async { //for it can do other work at the same time not wait for it
+    int method = 3,
+    int asrMethod = 0,
+  }) async {
     try {
-      final dateStr = '${date.day}-${date.month}-${date.year}'; // url to Data string
-      final url = Uri.parse( //abstract interface for api request
+      final dateStr = '${date.day}-${date.month}-${date.year}';
+      // The Aladhan `school` param: 0=Shafi, 1=Hanafi
+      final url = Uri.parse(
         '$_baseUrl/timings/$dateStr'
         '?latitude=$latitude'
         '&longitude=$longitude'

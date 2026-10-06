@@ -43,19 +43,24 @@ class _SplashScreenState extends State<SplashScreen>
     final isLoggedIn = prefs.getBool('is_logged_in') ?? false;
     final isGuest = prefs.getBool('is_guest') ?? false;
 
+    // For non-guest users, validate the Supabase session is still active.
+    // If the session expired (e.g. token too old), send back to auth.
     bool sessionValid = true;
     if (isLoggedIn && !isGuest) {
       sessionValid = SupabaseService.instance.isSignedIn;
       if (sessionValid) {
+        // Trigger a background full-sync on launch
         SyncService.instance.syncIfOnline();
       }
     }
 
+    // Check GPS BEFORE navigating — context is still valid here on splash
     if (!mounted) return;
     final gpsOn = await LocationService.isGpsEnabled();
     if (!mounted) return;
 
     if (!gpsOn) {
+      // Show dialog while still on splash — context is safe
       await showModalBottomSheet<void>(
         context: context,
         backgroundColor: Colors.transparent,
@@ -65,6 +70,7 @@ class _SplashScreenState extends State<SplashScreen>
       if (!mounted) return;
     }
 
+    // Navigate after dialog (or immediately if GPS is on)
     final goHome = isLoggedIn && sessionValid;
     await Navigator.of(context).pushReplacement(
       PageRouteBuilder(

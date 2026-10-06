@@ -6,7 +6,13 @@ import 'supabase_service.dart';
 import 'connectivity_service.dart';
 
 /// Background sync engine.
-
+///
+/// Strategy:
+/// 1. After every local DB write, call [syncIfOnline] (fire-and-forget).
+/// 2. SyncService also listens for connectivity changes. When the device
+///    regains internet, it automatically runs [fullSync] to push any
+///    locally-queued records that were missed while offline.
+/// 3. Only authenticated (non-guest) users' records are synced.
 class SyncService {
   SyncService._();
   static final SyncService instance = SyncService._();
@@ -18,13 +24,15 @@ class SyncService {
   StreamSubscription<List<ConnectivityResult>>? _connectivitySub;
   bool _isSyncing = false;
 
-  // Lifecycle
+  // ── Lifecycle ──────────────────────────────────────────────────────────────
 
+  /// Call once in main() after Supabase and DB are initialized.
+  /// Starts listening to connectivity changes for automatic background sync.
   void startListening() {
     _connectivitySub?.cancel();
     _connectivitySub =
         _connectivity.onConnectivityChanged.listen((results) async {
-      final online = results.any((r) => r != ConnectivityResult.none);                  
+      final online = results.any((r) => r != ConnectivityResult.none);
       if (online) {
         debugPrint('SyncService: connectivity restored — running fullSync');
         await fullSync();
@@ -36,7 +44,7 @@ class SyncService {
     _connectivitySub?.cancel();
   }
 
-  //Public API
+  // ── Public API ─────────────────────────────────────────────────────────────
 
   /// Tries to sync unsynced records if internet is available.
   /// Safe to call fire-and-forget — will not throw.
@@ -72,10 +80,10 @@ class SyncService {
       final rows = unsynced.map((r) {
         return {
           'user_id': userId,
-          'date': r['date'], // 'YYYY-MM-DD'
-          'prayer_name': r['prayer_name'], // integer index
-          'status': r['status'], // integer index
-          'prayed_at': r['prayed_at'], // nullable ISO string
+          'date': r['date'],                    // 'YYYY-MM-DD'
+          'prayer_name': r['prayer_name'],      // integer index
+          'status': r['status'],               // integer index
+          'prayed_at': r['prayed_at'],         // nullable ISO string
         };
       }).toList();
 
