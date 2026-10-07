@@ -1,11 +1,11 @@
-/// Converts Gregorian dates to Hijri (Islamic) calendar dates
+/// Converts Gregorian dates to Hijri calendar dates
 class HijriConverter {
   static Map<String, dynamic> toHijri(DateTime gregorian) {
     int gy = gregorian.year;
     int gm = gregorian.month;
     int gd = gregorian.day;
 
-    // Convert to Julian Day Number
+    // Convert to Julian Day Number (a unique number)
     int jd = _gregorianToJD(gy, gm, gd);
 
     // Convert Julian Day to Hijri
@@ -17,7 +17,7 @@ class HijriConverter {
       y--;
       m += 12;
     }
-    int a = y ~/ 100;
+    int a = y ~/ 100; //int (only the floor)
     int b = 2 - a + a ~/ 4;
     return (365.25 * (y + 4716)).toInt() +
         (30.6001 * (m + 1)).toInt() +
@@ -52,7 +52,7 @@ class HijriConverter {
 
   static String formatHijri(DateTime gregorian) {
     final h = toHijri(gregorian);
-    return '${h['day']} ${getHijriMonthName(h['month'])} ${h['year']}';
+    return '${h['day']} ${getHijriMonthName(h['month'])} ${h['year']}'; //value to string
   }
 
   static String formatHijriShort(DateTime gregorian) {

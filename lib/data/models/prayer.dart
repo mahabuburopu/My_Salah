@@ -1,8 +1,9 @@
-enum PrayerStatus { onTime, qaza, missed, upcoming, prayed, pending }
+//putting the options, and convert the prayer name to string and logics of enum
+enum PrayerStatus { onTime, qaza, missed, upcoming, prayed, pending } //enum -> option point
 
 enum PrayerName { fajr, dhuhr, asr, maghrib, isha }
 
-extension PrayerNameExtension on PrayerName {
+extension PrayerNameExtension on PrayerName { //declared in the package
   String get displayName {
     switch (this) {
       case PrayerName.fajr:
@@ -33,7 +34,7 @@ extension PrayerNameExtension on PrayerName {
     }
   }
 
-  /// Returns 'Jumah' on Fridays for male users (Dhuhr → Jumah), else displayName.
+  /// Returns 'Jumah' on Fridays for male users (Dhuhr-> Jumah), else displayName.
   String localizedName(String gender, DateTime date) {
     if (this == PrayerName.dhuhr &&
         gender == 'Male' &&

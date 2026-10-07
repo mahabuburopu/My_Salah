@@ -1,12 +1,13 @@
 import 'dart:math';
 
 /// Calculates Islamic prayer times based on geographic coordinates
+/// not an api beacause it will work for all over the world
 class PrayerTimeCalculator {
   final double latitude;
   final double longitude;
   final double timezone;
   final DateTime date;
-  /// 0 = Standard Shafi (shadow factor 1), 1 = Hanafi (shadow factor 2)
+  // 0 = Standard Shafi, 1 = Hanafi 
   final int asrMethod;
 
   PrayerTimeCalculator({
@@ -23,17 +24,17 @@ class PrayerTimeCalculator {
 
   Map<String, DateTime> getPrayerTimes() {
     final jd = _julianDay(date.year, date.month, date.day);
-    final d = jd - 2451545.0;
+    final d = jd - 2451545.0; //for a reff
 
-    final g = _sunMeanAnomaly(d);
+    final g = _sunMeanAnomaly(d); //for actual stage fo sun
     final q = _sunMeanLongitude(d);
     final l = _sunTrueLongitude(g, q);
-    final e = _obliquityEcliptic(d);
+    final e = _obliquityEcliptic(d); //korkot rekha
     final ra = _rightAscension(l, e);
-    final dec = _sunDeclination(l, e);
+    final dec = _sunDeclination(l, e);//in a particcular day how much angle the sun is up or down by korkot
     final eq = _equationOfTime(g, q, l, ra);
 
-    final transit = _getTransit(eq);
+    final transit = _getTransit(eq); //at 12pm condition when it comes top og head
     final sunrise = _getSunriseTime(dec, transit);
     final sunset = _getSunsetTime(dec, transit);
 
@@ -66,7 +67,7 @@ class PrayerTimeCalculator {
         1524.5;
   }
 
-  double _sunMeanAnomaly(double d) {
+  double _sunMeanAnomaly(double d) { 
     return _fixAngle(357.529 + 0.98560028 * d);
   }
 
@@ -155,7 +156,7 @@ class PrayerTimeCalculator {
     return DateTime(date.year, date.month, date.day, hours.clamp(0, 23), minutes.clamp(0, 59));
   }
 
-  double _fixAngle(double a) {
+  double _fixAngle(double a) { //angle f+greater then 360 bring under 360
     a = a % 360;
     if (a < 0) a += 360;
     return a;
