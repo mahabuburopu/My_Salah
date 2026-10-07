@@ -69,22 +69,23 @@ class _MosqueFinderScreenState extends State<MosqueFinderScreen> {
 
 
     try {
-      // Compact single-line GET query — most reliable across all networks/devices
-      final compact =
+      final query =
           '[out:json][timeout:25];'
           '(node["amenity"="place_of_worship"]["religion"="muslim"](around:$radiusMeters,$lat,$lon);'
           'way["amenity"="place_of_worship"]["religion"="muslim"](around:$radiusMeters,$lat,$lon););'
           'out center qt;';
 
-      // Try GET request (more reliable than POST on many networks/devices)
       http.Response response;
+      // Mirrors ordered by reliability for South Asian networks
       final endpoints = [
+        'https://overpass.openstreetmap.ru/api/interpreter',
+        'https://overpass.private.coffee/api/interpreter',
         'https://overpass-api.de/api/interpreter',
         'https://overpass.kumi.systems/api/interpreter',
         'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
       ];
 
-      response = await _tryOverpassEndpoints(endpoints, compact);
+      response = await _tryOverpassEndpoints(endpoints, query);
 
       if (response.statusCode != 200) {
         throw Exception('Server error: ${response.statusCode}');
@@ -164,30 +165,94 @@ class _MosqueFinderScreenState extends State<MosqueFinderScreen> {
       }
     } catch (e) {
       if (mounted) {
+        final msg = e.toString();
+        final msgLower = msg.toLowerCase();
+        final String errorText;
+        if (msgLower.contains('timeout') || msgLower.contains('timed out')) {
+          errorText = 'Mosque server timed out. Tap Retry — it usually works on the 2nd attempt.';
+        } else if (msgLower.contains('statuscode:') || msgLower.contains('status:') || msgLower.contains('http')) {
+          errorText = 'Mosque server returned an error. Tap Retry.';
+        } else if (msgLower.contains('all overpass')) {
+          errorText = 'All mosque servers failed to respond. Check internet & tap Retry.';
+        } else if (msgLower.contains('socket') || msgLower.contains('network') ||
+            msgLower.contains('connection') || msgLower.contains('certificate') ||
+            msgLower.contains('handshake')) {
+          errorText = 'Network error reaching mosque server. Check internet & tap Retry.';
+        } else {
+          errorText = 'Could not load mosques. Tap Retry.\n(${msg.length > 80 ? msg.substring(0, 80) : msg})';
+        }
         setState(() {
           _isLoading = false;
-          _error = 'Could not load mosques. Check your internet connection and try again.';
+          _error = errorText;
         });
       }
     }
   }
 
+  /// Tries each endpoint with three strategies in order:
+  /// 1. GET  (simple, no encoding issues)
+  /// 2. POST form-encoded  (avoids URL length limits)
+  /// 3. POST raw body  (some mirrors prefer this format)
   static Future<http.Response> _tryOverpassEndpoints(
       List<String> endpoints, String query) async {
-    Object? lastError;
+    final failures = <String>[];
+
     for (final base in endpoints) {
+      // --- Strategy 1: GET ---
       try {
-        final uri = Uri.parse(base)
-            .replace(queryParameters: {'data': query});
+        final uri = Uri.parse(base).replace(queryParameters: {'data': query});
         final resp = await http
-            .get(uri, headers: {'Accept': 'application/json'})
+            .get(uri, headers: {
+              'Accept': 'application/json',
+              'User-Agent': 'MySalahApp/1.0 Flutter',
+            })
             .timeout(const Duration(seconds: 25));
         if (resp.statusCode == 200) return resp;
+        failures.add('GET $base → ${resp.statusCode}');
       } catch (e) {
-        lastError = e;
+        failures.add('GET $base → ${e.runtimeType}');
+      }
+
+      // --- Strategy 2: POST form-encoded ---
+      try {
+        final resp = await http
+            .post(
+              Uri.parse(base),
+              headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Accept': 'application/json',
+                'User-Agent': 'MySalahApp/1.0 Flutter',
+              },
+              body: 'data=${Uri.encodeQueryComponent(query)}',
+            )
+            .timeout(const Duration(seconds: 25));
+        if (resp.statusCode == 200) return resp;
+        failures.add('POST-form $base → ${resp.statusCode}');
+      } catch (e) {
+        failures.add('POST-form $base → ${e.runtimeType}');
+      }
+
+      // --- Strategy 3: POST raw body ---
+      try {
+        final resp = await http
+            .post(
+              Uri.parse(base),
+              headers: {
+                'Content-Type': 'text/plain; charset=utf-8',
+                'Accept': 'application/json',
+                'User-Agent': 'MySalahApp/1.0 Flutter',
+              },
+              body: query,
+            )
+            .timeout(const Duration(seconds: 25));
+        if (resp.statusCode == 200) return resp;
+        failures.add('POST-raw $base → ${resp.statusCode}');
+      } catch (e) {
+        failures.add('POST-raw $base → ${e.runtimeType}');
       }
     }
-    throw lastError ?? Exception('All Overpass endpoints failed');
+
+    throw Exception('All Overpass endpoints failed:\n${failures.join("\n")}');
   }
 
   String _buildAddress(Map<String, dynamic> tags) {
