@@ -7,7 +7,7 @@ class ThemeProvider extends ChangeNotifier {
   bool get isDark => _isDark;
   ThemeMode get themeMode => _isDark ? ThemeMode.dark : ThemeMode.light;
 
-  /// [initialIsDark] pre-loaded by main() before runApp() to avoid flash.
+  /// initialIsDark pre-loaded by main() before runApp() to avoid flash.
   ThemeProvider({bool initialIsDark = true}) : _isDark = initialIsDark;
 
   Future<void> toggleTheme() async {

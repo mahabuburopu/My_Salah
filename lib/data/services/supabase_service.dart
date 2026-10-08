@@ -1,22 +1,21 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Central service for all Supabase operations.
-/// Auth requires internet — all methods throw [SupabaseAuthException] or
-/// return a descriptive error string when offline or credentials fail.
+//Central service for all Supabase operations.
+//Auth requires internet — all methods throw [SupabaseAuthException] or
+//return a descriptive error string when offline or credentials fail.
 class SupabaseService {
   SupabaseService._();
   static final SupabaseService instance = SupabaseService._();
 
-  // ── Replace these with your actual project values ─────────────────────────
   // Found at: Supabase Dashboard → Settings → API
   static const String _supabaseUrl = 'https://qrwrtgaerpivibeqkygj.supabase.co';
   static const String _supabaseAnonKey = 'sb_publishable__YSUGBezpkjqH6B5uOoeMg_tK0McElA';
-  // ─────────────────────────────────────────────────────────────────────────
+
 
   static SupabaseClient get _client => Supabase.instance.client;
 
-  /// Must be called once in main() before runApp.
+  // Must be called once in main() before runApp.
   static Future<void> initialize() async {
     await Supabase.initialize(
       url: _supabaseUrl,
@@ -24,7 +23,7 @@ class SupabaseService {
     );
   }
 
-  // ── Session ────────────────────────────────────────────────────────────────
+  //Session
 
   User? get currentUser => _client.auth.currentUser;
   bool get isSignedIn => _client.auth.currentUser != null;
@@ -32,7 +31,7 @@ class SupabaseService {
   /// The currently signed-in user's UUID, or null for guest.
   String? get userId => _client.auth.currentUser?.id;
 
-  // ── OTP & User Checks ──────────────────────────────────────────────────────
+  // OTP & User Checks
 
   /// Checks if an email is already registered using the custom RPC function.
   Future<bool> checkEmailExists(String email) async {
@@ -102,7 +101,7 @@ class SupabaseService {
     }
   }
 
-  // ── Sign Up ────────────────────────────────────────────────────────────────
+  // Sign Up
 
   /// Creates a Supabase Auth user + profile row after OTP is already verified.
   /// Returns null on success, or an error message string on failure.
@@ -139,7 +138,7 @@ class SupabaseService {
     }
   }
 
-  // ── Sign In ────────────────────────────────────────────────────────────────
+  // Sign In
 
   /// Signs in an existing user with email + password.
   /// Returns a map with user data on success, or throws [String] error message.
@@ -181,7 +180,7 @@ class SupabaseService {
     }
   }
 
-  // ── Sign Out ───────────────────────────────────────────────────────────────
+  //Sign Out
 
   Future<void> signOut() async {
     try {
@@ -191,7 +190,7 @@ class SupabaseService {
     }
   }
 
-  // ── Cloud Prayer Records ───────────────────────────────────────────────────
+  //Cloud Prayer Records
 
   /// Upserts a batch of prayer records to Supabase.
   /// [records] is a list of maps matching the prayer_records schema.

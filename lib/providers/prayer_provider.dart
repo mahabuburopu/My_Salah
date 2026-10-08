@@ -71,7 +71,7 @@ class PrayerProvider extends ChangeNotifier with WidgetsBindingObserver {
     _markPendingAsMissedIfDateChanged();
   }
 
-  // ── AppLifecycleObserver: sync notification responses on app resume ─────────
+  //AppLifecycleObserver: sync notification responses on app resume
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {

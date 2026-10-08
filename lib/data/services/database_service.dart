@@ -5,30 +5,31 @@ import '../models/prayer.dart';
 import '../models/prayer_record.dart';
 
 class DatabaseService {
-  // ── Singleton ────────────────────────────────────────────
+  //Singleton to create a same data base
   static final DatabaseService _instance = DatabaseService._internal();
   factory DatabaseService() => _instance;
   DatabaseService._internal();
 
-  static Database? _database;
+  static Database? _database;  // store actual database obj
   static const String _dbName = 'my_salah.db';
-  static const int _dbVersion = 3; // v3 adds is_synced column
+  static const int _dbVersion = 3; // v3 introduce the is_synced column
 
-  Future<Database> get database async {
-    _database ??= await _initDatabase();
+  Future<Database> get database async { //initialize the data base if nothing opend yet
+    _database ??= await _initDatabase();  // otherwise use the exiting one
     return _database!;
   }
 
   Future<Database> _initDatabase() async {
     final path = join(await getDatabasesPath(), _dbName);
-    return openDatabase(
+    return openDatabase(   // if it find mysalah.db then it open it
       path,
       version: _dbVersion,
-      onCreate: _onCreate,
-      onUpgrade: _onUpgrade,
+      onCreate: _onCreate,  // create the database
+      onUpgrade: _onUpgrade, // update the data
     );
   }
 
+  // create prayer_records table 
   Future<void> _onCreate(Database db, int version) async {
     await db.execute('''
       CREATE TABLE prayer_records (
@@ -42,7 +43,7 @@ class DatabaseService {
       )
     ''');
     await db.execute(
-        'CREATE INDEX idx_prayer_records_date ON prayer_records(date)');
+        'CREATE INDEX idx_prayer_records_date ON prayer_records(date)'); // indexing date wise..
 
     // v2: users table (for future auth migration from SharedPreferences)
     await db.execute('''
@@ -60,7 +61,7 @@ class DatabaseService {
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
-      // Add index (safe to ignore if already exists)
+      // Add index
       try {
         await db.execute(
             'CREATE INDEX idx_prayer_records_date ON prayer_records(date)');
@@ -84,7 +85,7 @@ class DatabaseService {
       try {
         await db.execute(
             'ALTER TABLE prayer_records ADD COLUMN is_synced INTEGER NOT NULL DEFAULT 0');
-      } catch (_) {} // safe if column already exists (e.g. fresh install)
+      } catch (_) {} // safe if column already exists
     }
   }
 
@@ -105,7 +106,7 @@ class DatabaseService {
     }
   }
 
-  /// Wipes all local prayer records. Use this when signing out or switching accounts.
+  /// Wipes all local prayer records. while signing out or switching accounts.
   Future<void> clearAllRecords() async {
     try {
       final db = await database;
@@ -117,8 +118,8 @@ class DatabaseService {
   }
 
   /// Bulk-inserts records downloaded from Supabase into the local DB.
-  /// Each record is marked is_synced=1 (already in cloud — no need to re-push).
-  /// Uses IGNORE conflict so locally-edited records are NOT overwritten.
+  /// Each record is marked is_synced=1 (already in cloud ).
+  /// IGNORE conflict - locally-edited records are not overwritten.
   Future<void> bulkInsertSynced(List<Map<String, dynamic>> records) async {
     try {
       final db = await database;
