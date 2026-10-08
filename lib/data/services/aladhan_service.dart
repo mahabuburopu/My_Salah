@@ -1,4 +1,4 @@
-import 'dart:convert';
+import 'dart:convert'; //from api it comed with JSON so code ha dto reafd it
 import 'package:http/http.dart' as http;
 
 class AladhanService {
@@ -11,7 +11,7 @@ class AladhanService {
     required double latitude,
     required double longitude,
     required DateTime date,
-    int method = 3,
+    int method = 4,
     int asrMethod = 0,
   }) async {
     try {

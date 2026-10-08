@@ -20,7 +20,7 @@ class AppColors {
   static const Color maghribColor = Color(0xFFE87B4B);
   static const Color ishaColor = Color(0xFF7B6BAE);
 
-  // ── Static dark values (for widgets that need a constant) ──
+  //Static dark values (for widgets that need a constant) 
   static const Color darkBg = Color(0xFF1A1008);
   static const Color darkSurface = Color(0xFF251A0E);
   static const Color darkCard = Color(0xFF2C1F11);
